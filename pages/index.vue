@@ -14,7 +14,7 @@ const material: Ref<string | undefined> = ref(undefined)
 
 const fetchProducts = async (params: getProductsParams) => {
   if (params.order) {
-    params.sortBy = 'Price'
+    params.sortBy = 'price'
   }
   const { data, error, pending } = await useFetch<Product[]>(
     `https://65b6c8d1da3a3c16ab013017.mockapi.io/products`,
