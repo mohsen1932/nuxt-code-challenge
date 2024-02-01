@@ -1,31 +1,18 @@
 <script setup lang="ts">
-import type { getProductsParams, Product } from '~/types/product'
+import { useProducts } from '~/stores/use-products'
 
 useHead({
   title: 'Products',
 })
 
-const products: Ref<Product[] | null> = ref(null)
-const isLoading: Ref<boolean> = ref(false)
-const isError: Ref<boolean> = ref(false)
+const { $state, fetchProducts } = useProducts()
+
+const products = computed(() => $state.products)
+const isLoading = computed(() => $state.isLoading)
+const isError = computed(() => $state.isError)
 
 const order: Ref<'asc' | 'desc' | undefined> = ref(undefined)
 const material: Ref<string | undefined> = ref(undefined)
-
-const fetchProducts = async (params: getProductsParams) => {
-  if (params.order) {
-    params.sortBy = 'price'
-  }
-  const { data, error, pending } = await useFetch<Product[]>(
-    `https://65b6c8d1da3a3c16ab013017.mockapi.io/products`,
-    {
-      params,
-    },
-  )
-  products.value = data.value
-  isLoading.value = pending.value
-  isError.value = Boolean(error.value)
-}
 
 const handleFilterByMaterial = (value: string | undefined) => {
   material.value = value
@@ -39,30 +26,36 @@ watchEffect(() => {
   fetchProducts({
     material: material.value,
     order: order.value,
+    sortBy: 'price',
   })
 })
 </script>
 
 <template>
-  <FilterAndSorting
-    @set-material="handleFilterByMaterial"
-    @set-sorting="handleSorting"
-  />
-  <div class="items-center flex flex-col w-full">
-    <Loading v-if="isLoading" />
-    <Alert
-      v-if="isError"
-      text="Something went wrong!. please try again later."
+  <div>
+    <FilterAndSorting
+      @set-material="handleFilterByMaterial"
+      @set-sorting="handleSorting"
     />
+    <div class="items-center flex flex-col w-full">
+      <Loading v-if="isLoading" />
+      <Alert
+        v-if="isError"
+        text="Something went wrong!. please try again later."
+      />
 
-    <ul
-      v-if="products && products.length"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full"
-    >
-      <li v-for="product of products" :key="product.id">
-        <Product :product="product" />
-      </li>
-    </ul>
-    <Alert v-if="!isLoading && !isError && !products" text="List is empty." />
+      <ul
+        v-if="products.length"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full"
+      >
+        <li v-for="product of products" :key="product.id">
+          <Product :product="product" />
+        </li>
+      </ul>
+      <Alert
+        v-if="!isLoading && !isError && !products.length"
+        text="List is empty."
+      />
+    </div>
   </div>
 </template>

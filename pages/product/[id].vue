@@ -1,22 +1,14 @@
 <script setup lang="ts">
+import { useProduct } from '~/stores/use-product'
 import { useCart } from '~/stores/use-cart'
-import type { Product } from '~/types/product'
 
 const route = useRoute()
 const { addToCart } = useCart()
+const { $state, fetchProduct } = useProduct()
 
-const product: Ref<Product | null> = ref(null)
-const isLoading: Ref<boolean> = ref(false)
-const isError: Ref<boolean> = ref(false)
-
-const fetchProduct = async (id: string) => {
-  const { data, error, pending, status } = await useFetch<Product>(
-    `https://65b6c8d1da3a3c16ab013017.mockapi.io/products/${id}`,
-  )
-  product.value = data.value
-  isLoading.value = pending.value
-  isError.value = Boolean(error.value)
-}
+const product = computed(() => $state.product)
+const isLoading = computed(() => $state.isLoading)
+const isError = computed(() => $state.isError)
 
 onMounted(() => {
   fetchProduct(route.params.id as string)
